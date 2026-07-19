@@ -36,5 +36,68 @@
     <script src="cause.js">
        
     </script>
+<audio id="bg-music" loop>
+    <source src="audio.mp3" type="audio/mpeg">
+</audio>
+<button id="music-toggle" style="position:fixed; bottom:20px; right:20px; z-index:9999; background:linear-gradient(45deg,#ff69b4,#da70d6); border:none; border-radius:50%; width:50px; height:50px; font-size:1.3rem; cursor:pointer; box-shadow:0 4px 10px rgba(255,105,180,0.4);">🔇</button>
+
+<script>
+    const bgMusic = document.getElementById('bg-music');
+    const musicToggle = document.getElementById('music-toggle');
+    let isPlaying = false;
+
+    // Restore saved position + state on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedTime = localStorage.getItem('musicTime');
+        const wasPlaying = localStorage.getItem('musicPlaying') === 'true';
+
+        if (savedTime) {
+            bgMusic.currentTime = parseFloat(savedTime);
+        }
+
+        if (wasPlaying) {
+            musicToggle.textContent = '🔊';
+            isPlaying = true;
+            // Try autoplay immediately (works if browser allows continued interaction)
+            bgMusic.play().catch(() => {
+                // If blocked, wait for first click to resume
+                document.addEventListener('click', () => {
+                    bgMusic.play();
+                }, { once: true });
+            });
+        } else {
+            musicToggle.textContent = '🔇';
+        }
+    });
+
+    // Save position continuously while playing
+    setInterval(() => {
+        if (isPlaying) {
+            localStorage.setItem('musicTime', bgMusic.currentTime);
+            localStorage.setItem('musicPlaying', 'true');
+        }
+    }, 500);
+
+    // Manual toggle
+    musicToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isPlaying) {
+            bgMusic.pause();
+            musicToggle.textContent = '🔇';
+            localStorage.setItem('musicPlaying', 'false');
+        } else {
+            bgMusic.play();
+            musicToggle.textContent = '🔊';
+            localStorage.setItem('musicPlaying', 'true');
+        }
+        isPlaying = !isPlaying;
+    });
+
+    // Save state right before navigating away
+    window.addEventListener('beforeunload', () => {
+        localStorage.setItem('musicTime', bgMusic.currentTime);
+        localStorage.setItem('musicPlaying', isPlaying ? 'true' : 'false');
+    });
+</script>
 </body>
 </html>
